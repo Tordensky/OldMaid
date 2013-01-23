@@ -5,4 +5,4 @@ Created on Jan 23, 2013
 '''
 
 if __name__ == '__main__':
-    print "Hello world"
+    print "Ready to start working master"
