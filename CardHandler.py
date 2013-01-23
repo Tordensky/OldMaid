@@ -3,7 +3,8 @@ Created on Jan 23, 2013
 
 @author: Simon
 '''
-from Properties import *
+from Properties import SPADES, HEARTS, CLUBS, DIAMONDS, RED, BLACK
+from random import shuffle
 import sys
 
 class Hand(object):
@@ -14,7 +15,7 @@ class Hand(object):
         self.cardDeck = []
         
     def shuffle(self):
-        pass
+        shuffle(self.cardDeck)
     
     def addCard(self, card):
         self.cardDeck.append(card)
@@ -32,6 +33,7 @@ class Hand(object):
         
     def count(self):
         return self.cardDeck.count()
+
         
 class Card(object):
     '''
@@ -85,6 +87,7 @@ if __name__ == '__main__':
     print "Should be %d is: %d" % (1, cardB.getNumber())
     print "Should be %s is: %s" % (SPADES, cardA.getKind())
     
+    #tests for Hand Class
     hand = Hand()
     print "Should be an exception", hand.pickCard(2)
     
