@@ -6,7 +6,7 @@ Created on Jan 23, 2013
 
 import json
 
-class MyClass(object):
+class Communication(object):
     '''
     classdocs
     '''
