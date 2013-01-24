@@ -7,6 +7,5 @@ import GameHandler
 
 if __name__ == '__main__':    
     player = GameHandler.Player()
-    
     player.start()
     
