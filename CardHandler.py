@@ -12,36 +12,58 @@ class Hand(object):
     Class for holding the hand of the player
     '''
     def __init__(self):
-        self._cardDeck = []
+        self._cardsOnHand = []
+        self._pairs = []
         
     def __str__(self):
-        return "Cards in hand: " + str(self._cardDeck)
+        return "Cards in hand: " + str(self._cardsOnHand)
         
     def shuffle(self):
-        shuffle(self._cardDeck)
+        shuffle(self._cardsOnHand)
     
-    def addCard(self, card):
-        self._cardDeck.append(card)
+    def addCard(self, newCard):
+        isPair, pairCard = self._checkIfPair(newCard)
+        if isPair:
+            self._pairs.append((pairCard, newCard))
+        else:
+            self._cardsOnHand.append(newCard)
         self.shuffle()
+    
+    def _checkIfPair(self, newCard):
+        for card in self._cardsOnHand:
+            if card.isPair(newCard):
+                self._cardsOnHand.remove(card)
+                return (True, card)
+        return (False, None)
         
     def getAllCards(self):
-        return self._cardDeck
+        return self._cardsOnHand
     
-    def pickCard(self, index):
+    def _removePair(self):
+        return self._pairs.pop(0)
+    
+    def removeNextPair(self):
+        if self.countPairs() > 0:
+            return self._removePair()
+        return None
+            
+    def removeAllPairs(self):
+        tmp = self._pairs
+        self._pairs =[]
+        return tmp;
+        
+    def pickCard(self, index = 0):
         try:
-            return self._cardDeck.pop(index)
+            return self._cardsOnHand.pop(index)
         except:
             print "Error picking card from hand:", sys.exc_info()[0]
             raise
-    
-    def _getPairs(self):
-        pass
         
     def count(self):
-        return self._cardDeck.count()
+        return len(self._cardsOnHand)
     
     def countPairs(self):
-        pass
+        return len(self._pairs)
 
         
 class Card(object):
@@ -103,6 +125,7 @@ if __name__ == '__main__':
     cardC = Card(1, Kinds.HEARTS)
     cardD = Card(0, Kinds.JOKER)
     
+    
     print cardA
     print cardB
     print cardC
@@ -131,4 +154,12 @@ if __name__ == '__main__':
     print hand
     hand.shuffle()
     print "After shuffle", hand
+    print "Picket: ", hand.pickCard(1)
+    print hand
+    print "Cards on hand:", hand.count()
+    print "Card in pair:", hand.countPairs()
+    print hand.removeNextPair()
+    print hand.removeAllPairs()
+    print "Cards on hand:", hand.count()
+    print "Card in pair:", hand.countPairs()
     

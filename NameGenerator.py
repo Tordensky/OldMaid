@@ -25,8 +25,16 @@ partA = [ \
          "defeated",
          "sexy",
          "fancy",
+         "black",
+         "interesting",
+         "notPretty",
+         "handsome",
+         "girly",
+         "matcho",
+         "gangsta",
          "overExposed", 
-         "winning", 
+         "winning",
+         "suicidal", 
          "gifted" \
          ]
 
@@ -35,6 +43,16 @@ partB = [ \
         "helicopter",
         "mountain",
         "bread",
+        "pencil",
+        "firetruck",
+        "airplane",
+        "pilot",
+        "manBearPig",
+        "transistor",
+        "horse",
+        "donkey",
+        "robot",
+        "Ass",
         "baby",
         "computer",
         "car",
@@ -53,8 +71,10 @@ partC = [\
         "swimmer",
         "sitter",
         "writer",
-        "screamer", 
-        "gamer", 
+        "screamer",
+        "smeller",
+        "storyTeller", 
+        "gamer",
         "numberOne" \
         ]
 
