@@ -5,6 +5,8 @@ Created on Jan 23, 2013
 '''
 import CardHandler
 import NameGenerator
+import json
+from Properties import ServerSettings
 
 class Player(object):
     '''
@@ -14,18 +16,18 @@ class Player(object):
         '''
         Constructor
         '''
-        self.hand = CardHandler.Hand()
         self.playerName = NameGenerator.Generator().generateName()
         print "Player name: " + self.playerName
+        
+        self.hand = CardHandler.Hand()
+        
+        self._game = Game()
     
     def start(self):
-        print "Joining new Game"
         self._joinNewGame()        
         
     def _joinNewGame(self):
-        # TODO join a new game on the server
-        pass
-    
+        self._game.joinGame(self.playerName)
 
 class Game(object):
     '''
@@ -37,8 +39,12 @@ class Game(object):
     
     # Server methods
     def joinGame(self, nick):
-        pass
-    
+        print "Joining new game @ addr:", ServerSettings.ADDR, "port:", ServerSettings.PORT
+        msg = {"cmd" : "join", "nick" : nick}
+        msg = json.dumps(msg)
+        
+        
+        
     def drawCard(self):
         pass
     
@@ -60,4 +66,9 @@ class Game(object):
     
     def pickCard(self):
         pass
+    
+    
+if __name__ == '__main__':    
+    player = Player()
+    player.start()
         
