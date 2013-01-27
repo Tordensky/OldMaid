@@ -21,6 +21,10 @@ class Hand(object):
     def shuffle(self):
         shuffle(self._cardsOnHand)
     
+    def addCardFromJSON(self, json):
+        newCard = Card(json[0], json[1])
+        self.addCard(newCard)
+        
     def addCard(self, newCard):
         isPair, pairCard = self._checkIfPair(newCard)
         if isPair:

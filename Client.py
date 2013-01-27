@@ -6,6 +6,6 @@ Created on Jan 23, 2013
 import GameHandler
 
 if __name__ == '__main__':    
-    player = GameHandler.Player()
+    player = GameHandler.Game()
     player.start()
     
