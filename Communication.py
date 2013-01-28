@@ -101,8 +101,7 @@ class Handler(object):
     def send(self, msg):
         self.sock.send(msg)
 
-             
-        
+                     
 if __name__ == "__main__":
     if len(sys.argv) > 1: 
         if sys.argv[1] == "-c":
