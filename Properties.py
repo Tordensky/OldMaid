@@ -4,10 +4,11 @@ Created on Jan 23, 2013
 @author: Simon
 '''
 class ServerSettings(object):
-    ADDR = "njaal.net"
+    HOST = "129.242.22.237"#"njaal.net" # 
     PORT =  9898
+    ADDR = (HOST, PORT)
 
-class Kinds(object):
+class CardType(object):
     SPADES = "spades"
     CLUBS = "clubs"
     HEARTS = "hearts"
@@ -30,4 +31,9 @@ class State(object):
     ERROR = 7
     OFFER_HAND = 8
     PICK = 9
+    
+class EventType(object):
+    JOIN = "join"
+    FINNISH = "finnish"
+    ERROR = "error"
 

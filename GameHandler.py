@@ -1,79 +1,118 @@
 '''
 Created on Jan 23, 2013
-
 @author: Simon
 '''
-import CardHandler
-import NameGenerator
-import json
-from Communication import Communication
-from Properties import ServerSettings, State
+import CardHandler, NameGenerator, json, EventHandler,socket, thread
+from Communication import Communication, Server
+from Properties import ServerSettings, State, EventType
 
+class Players(object):
+    def __init__(self, myName = ""):
+        self.players = []
+        self.myName = myName
+        self.myAddr = ""
+        self.myNum = -1
+    
+    def __str__(self):
+        return self.__repr__()
+        
+    def __repr__(self):
+        msg = ""
+        for x in self.players:
+            msg = msg + ("%s" % (x))
+        return msg
+    
+    def addPlayersFromJson(self, msg):
+        for player in sorted(msg["players"].keys()):
+            
+            name, num, addr = self._parsePlayerInfo(player, msg["players"][player])
+            
+            player = Player(name, num, addr)
+            
+            if name == self.myName:
+                self.myNum = num
+                self.myAddr = addr
+                player.isMe = True
+            
+            self.players.append(player)
+        
+        print "Added following players to game:"    
+        print self
+    
+    def _parsePlayerInfo(self, key, playerData):
+        name = playerData[1]
+        num = int(key[-1])
+        addr = tuple(playerData[0])
+        return name, num, addr
+                    
 class Player(object):
     def __init__(self, name, playerNum, addr):
         self.name = name
         self.num = playerNum
         self.addr = addr
+        self.isMe = False
+        self.out = False
+    
+    def __repr__(self):
+        return "Player%s is %s @ Addr: %s, IsMe: %s\n" % (self.num, self.name, self.addr, self.isMe)
+        
+    def isFirst(self):
+        if self.myNum == 1:
+            return True
+        return False
      
-
 class Game(object):
     '''
     Class for implementing player code
     '''
-    
     def __init__(self):
-        self.name = NameGenerator.Generator().generateName()
-        self.num = -1
-        self.addr = ("", 0)
         
-        self.playerCount = 0
-        self.otherPlayers = []
-        
-        print 'Game name: ' + self.name
-        
-        self.server = Communication(('localhost', 9898))
-        self.listener = None
-        self.leftPlayer = None
-        self.rightPlayer = None
-        
+        name = NameGenerator.Generator().generateName()
+        print 'Game name: ' + name
+                
+        self.players = Players(name)
         self.hand = CardHandler.Hand()
+ 
+        self.eventQueue = EventHandler.EventQueue()
+        self.dispatcher = EventHandler.Dispatcher()
+        self._setupEvents()
+ 
+        self.cardServer = Communication(ServerSettings.ADDR)
+             
+    def _setupEvents(self):
+        self.dispatcher.register_handler(EventType.FINNISH, self._finnish)
         
-        self.state = State.NOT_STARTED
+        self.dispatcher.register_handler(EventType.JOIN, self.joinGame)
+        
+        self.dispatcher.register_handler(EventType.ERROR, self._error)
+        
+    def _finnish(self, event):
+        # Todo teardown system
+        print "Client is shutting down"
+        self.finished = True
+        
+    def _error(self, event):
+        data = event.data
+        
+        if data.has_key("msg"):
+            print data["msg"]
             
+        if data.has_key("fatal"):
+            if data["fatal"] == True:
+                self.eventQueue.addNewEvent(EventType.FINNISH)
+                
     def start(self):
-        self.joinGame(self.name)
-        while(True):
-            if self.state == State.JOINED:
-                self._setupPlayerCom()
-            elif self.state == State.CONNECTED:
-                self.state = self._isFirst()
-            elif self.state == State.DRAW:
-                self.drawCard()
-            elif self.state == State.NEXT_TURN:
-                self.yourTurn()
-            elif self.state == State.WAIT:
-                self.wait()
-            elif self.state == State.ERROR:
-                print "GOT AN ERROR STATE"
-                break
-            elif self.state == State.LAST_CARD:
-                print self.hand
-                print "NumCards:", self.hand.count()
-                print "NumPairs:", self.hand.countPairs()
-                self.state = State.OFFER_HAND
-            elif self.state == State.OFFER_HAND:
-                self.offerHand()
-            elif self.state == State.PICK:
-                self.pickCard()
-
-    def _isFirst(self):
-        if self.num == 1:
-            return State.DRAW
-        return State.WAIT
-
+        self.eventQueue.addNewEvent(EventType.JOIN)
+        
+        self.finished = False
+        while not self.finished:
+            for event in self.eventQueue.getAll():
+                self.dispatcher.dispatch(event)
+        
     def wait(self):
         res = self.leftPlayer.receive()
         
+        print "RESULT IN WAIT:", res
         res = json.loads(res)
         
         if res["cmd"] == "your_turn":
@@ -81,70 +120,56 @@ class Game(object):
             msg = json.dumps(msg)
             self.leftPlayer.send(msg)
             self.state = State.DRAW
+        
         elif res["cmd"] == "offer":
             print res
             msg = {"result" : "ok"}
             msg = json.dumps(msg)
             self.leftPlayer.send(msg)
             self.state = State.PICK
-             
-        
-                                            
+                                              
     # Server methods
-    def joinGame(self, nick):
+    def joinGame(self, event):
         '''
         send: {'cmd':'join', 'nick':your_nick}
         recv: {'result':'ok', 'players':['player1':[(ip, port), nick], 'player2':[(ip, port), nick], ...]}
         '''
-        print 'Joining new game @ addr:', ServerSettings.ADDR, 'port:', ServerSettings.PORT
-        msg = {'cmd' : 'join', 'nick' : nick}
-        msg = json.dumps(msg)
+        print 'Joining new game @ addr:', ServerSettings.HOST, 'port:', ServerSettings.PORT
         
-        self.server.connect()
-        self.server.send(msg)
-        result = self.server.receive(1024)
-        
-        print result
-        
-        try:
-            result = json.loads(result)
-             
-        except:
-            print "Error parsing message"
-            
-        if result["result"] == "ok":
-            self._addPlayersInfo(result)
-            self.state = State.JOINED
-            print self.num, "Player Count:", self.playerCount
-        
-    def _addPlayersInfo(self, msg):
-        for player in msg["players"]:
-            self.playerCount += 1
-            name, num, addr = self._parsePlayerInfo(player, msg["players"][player])
-            if name == self.name:
-                self.num = num
-                self.addr = addr
+        try: 
+            self.cardServer.connect()
+            cmd = {"cmd" : "join", "nick" : self.players.myName}
+            result = self.cardServer.cmd(cmd)
+            if result["result"] == "ok":
+                self.players.addPlayersFromJson(result)
+                
             else:
-                self.otherPlayers.append(Player(name, num, addr))
-    
-    def _parsePlayerInfo(self, key, playerData):
-        name = playerData[1]
-        num = int(key[-1])
-        addr = tuple(playerData[0])
-        return name, num, addr
-    
+                eventData = {"msg" : "Error: Got some kind of error from card server", "fatal" : True}
+                self.eventQueue.addNewEvent(EventType.ERROR, eventData)
+                
+        except TypeError:
+            eventData = {"msg" : "Error: Could not parse to JSON in joinGame", "fatal" : True}
+            self.eventQueue.addNewEvent(EventType.ERROR, eventData)
+        
+        except socket.error:
+            eventData = {"msg" : "Error: Could not connect to card server after several tries, Exiting", "fatal" : True}
+            self.eventQueue.addNewEvent(EventType.ERROR, eventData)
+            
+        self._setupPlayerCom()
+               
     def _setupPlayerCom(self):
-        self.listener = Communication(self.addr)
-        self.listener.listen()
-    
-        self.rightPlayer = Communication(self.otherPlayers[0].addr)
-        self.rightPlayer.connect()
+        print "Starting to set up connection to left and right player"
         
-        self.leftPlayer = self.listener.accept()
-        
-        self.state = State.CONNECTED
-        print "Goes to accept"
-        
+        self.rigthHand = Server(self.players.myAddr, self.eventQueue)
+        thread.start_new(self.rigthHand.run, ())
+#        self.listener = Communication(self.addr)
+#        self.listener.listen()
+#    
+#        self.rightPlayer = Communication(self.players[0].addr)
+#        self.rightPlayer.connect()
+#        
+#        self.leftPlayer = self.listener.accept()
+                
     def drawCard(self):
         '''
         send: {'cmd':'draw'} 
@@ -199,7 +224,6 @@ class Game(object):
         self.rightPlayer.send(msg)
         
         res = self.rightPlayer.receive(1024)
-        
         res = json.loads(res)
         
         if res["result"] == "ok":
@@ -225,6 +249,10 @@ class Game(object):
         if res["result"] == "ok":
             self.state = State.WAIT
             print res
+            
+        elif res["result"] == "out":
+            # TODO connect to next player            
+            print "player to offer hand is out of cards"
     
     def pickCard(self):
         '''

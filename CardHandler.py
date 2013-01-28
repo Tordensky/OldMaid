@@ -3,7 +3,7 @@ Created on Jan 23, 2013
 
 @author: Simon
 '''
-from Properties import Kinds, CardColor
+from Properties import CardType, CardColor
 from random import shuffle
 import sys
 
@@ -22,6 +22,7 @@ class Hand(object):
         shuffle(self._cardsOnHand)
     
     def addCardFromJSON(self, json):
+        print json
         newCard = Card(json[0], json[1])
         self.addCard(newCard)
         
@@ -82,8 +83,8 @@ class Card(object):
         return self._isCompatiblePair(card)
     
     def __str__(self):
-        if self._kind == Kinds.JOKER:
-            return "Card: %s" % (Kinds.JOKER)
+        if self._kind == CardType.JOKER:
+            return "Card: %s" % (CardType.JOKER)
         return "Card: %d of %s" % (self._number, self._kind)
         
     def __repr__(self):
@@ -92,12 +93,12 @@ class Card(object):
                 
     @property    
     def color(self):
-        if self._kind in [Kinds.SPADES, Kinds.CLUBS]:
+        if self._kind in [CardType.SPADES, CardType.CLUBS]:
             return CardColor.BLACK
-        elif self._kind in [Kinds.HEARTS, Kinds.DIAMONDS]:
+        elif self._kind in [CardType.HEARTS, CardType.DIAMONDS]:
             return CardColor.RED
         elif self._kind in [CardColor.JOKER]:
-            return Kinds.JOKER
+            return CardType.JOKER
         else:
             raise Exception("Invalid Card Kind")
                 
@@ -124,10 +125,10 @@ class Card(object):
         
 if __name__ == '__main__':    
     # Tests for cards class
-    cardA = Card(1, Kinds.SPADES)
-    cardB = Card(1, Kinds.DIAMONDS)
-    cardC = Card(1, Kinds.HEARTS)
-    cardD = Card(0, Kinds.JOKER)
+    cardA = Card(1, CardType.SPADES)
+    cardB = Card(1, CardType.DIAMONDS)
+    cardC = Card(1, CardType.HEARTS)
+    cardD = Card(0, CardType.JOKER)
     
     
     print cardA
@@ -140,7 +141,7 @@ if __name__ == '__main__':
     print "Should be %d is: %d" % (CardColor.RED, cardB.color)
     print "Should be %d is: %d" % (CardColor.BLACK, cardA.color)  
     print "Should be %d is: %d" % (1, cardB.getNumber())
-    print "Should be %s is: %s" % (Kinds.SPADES, cardA.getKind())
+    print "Should be %s is: %s" % (CardType.SPADES, cardA.getKind())
     
     #tests for Hand Class
     hand = Hand()

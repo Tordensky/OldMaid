@@ -4,7 +4,7 @@
 import socket, time, json, random
 import threading
 
-class Kinds:
+class CardType:
     HEARTS  = "hearts"
     SPADES   = "spades"
     CLUBS    = "clubs"
@@ -24,12 +24,12 @@ class Card:
         
     @property
     def color(self):
-        if self.kind in Kinds.BLACKS:
-            return Kinds.RED
-        elif self.kind in Kinds.REDS:
-            return Kinds.BLACK
-        elif self.kind == Kinds.JOKER:
-            return Kinds.JOKER
+        if self.kind in CardType.BLACKS:
+            return CardType.RED
+        elif self.kind in CardType.REDS:
+            return CardType.BLACK
+        elif self.kind == CardType.JOKER:
+            return CardType.JOKER
         else:
             raise Exception("Invalid card kind: Card has no color")
         
@@ -39,7 +39,7 @@ class Card:
         return False
         
     def __repr__(self):
-        if self.kind == Kinds.JOKER:
+        if self.kind == CardType.JOKER:
             return "The joker"
         return "%s of %s" % (self.value, self.kind)
         
@@ -56,10 +56,10 @@ class Hand:
             self._cards.append(card)
             
     def _discard(self, card):
-        if card.color == Kinds.RED:
-            colors = Kinds.REDS
+        if card.color == CardType.RED:
+            colors = CardType.REDS
         else:
-            colors = Kinds.BLACKS
+            colors = CardType.BLACKS
         
         cmd = {"cmd": "discard"}
         if self.numCards() == 0:
@@ -91,7 +91,7 @@ class Hand:
         
     def getJokerIndex(self):
         for x in range(self.numCards()):
-            if self._cards[x].color == Kinds.JOKER:
+            if self._cards[x].color == CardType.JOKER:
                 return x
         return False
             
@@ -156,7 +156,7 @@ class Server:
             player.send(json.dumps(cmd))
             
     def drawStage(self):
-        kinds = [Kinds.HEARTS, Kinds.SPADES, Kinds.CLUBS, Kinds.DIAMONDS]
+        kinds = [CardType.HEARTS, CardType.SPADES, CardType.CLUBS, CardType.DIAMONDS]
         deck = []
         for kind in kinds:
             for x in range(1, 14):

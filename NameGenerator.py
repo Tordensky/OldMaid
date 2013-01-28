@@ -8,6 +8,11 @@ import random
 
 partA = [ \
          "crazy",
+         "SteffenThe",
+         "SimonThe",
+         "SimenThe",
+         "IdaThe",
+         "AlexThe",
          "green",
          "skinny",
          "stupidAss",
@@ -26,6 +31,7 @@ partA = [ \
          "sexy",
          "fancy",
          "black",
+         "legendary"
          "interesting",
          "notPretty",
          "handsome",
@@ -43,6 +49,8 @@ partB = [ \
         "helicopter",
         "mountain",
         "bread",
+        "table",
+        "iceCream",
         "pencil",
         "firetruck",
         "airplane",
@@ -52,6 +60,7 @@ partB = [ \
         "horse",
         "donkey",
         "robot",
+        "santa",
         "Ass",
         "baby",
         "computer",
@@ -66,16 +75,15 @@ partC = [\
         "killer",
         "eater", 
         "hunter", 
-        "rappist",
+        "rapist",
         "runner",
         "swimmer",
         "sitter",
         "writer",
         "screamer",
         "smeller",
-        "storyTeller", 
-        "gamer",
-        "numberOne" \
+        "legend", 
+        "gamer", \
         ]
 
 class Generator(object):
