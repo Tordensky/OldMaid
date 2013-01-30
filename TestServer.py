@@ -109,14 +109,14 @@ class Hand:
             
 
 
-class Server:
+class RightHandServer:
     def start(self, port, numPlayers=4):
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         self._sock.bind(("0.0.0.0", port))
         self._sock.listen(3)
         self._numPlayers = numPlayers
-        print "Server is running"
+        print "RightHandServer is running"
         
         while True:
             print "New game: Waiting for players"
@@ -190,6 +190,6 @@ class Server:
         pass
         
 if __name__ == '__main__':
-    server = Server()
+    server = RightHandServer()
     server.start(9898, 2)
-    print "Server terminated"
+    print "RightHandServer terminated"

@@ -6,14 +6,16 @@ Created on Jan 23, 2013
 from Properties import CardType, CardColor
 from random import shuffle
 import sys
+from EventHandler import EventType
 
 class Hand(object):
     '''
     Class for holding the hand of the player
     '''
-    def __init__(self):
+    def __init__(self, eventQueue):
         self._cardsOnHand = []
         self._pairs = []
+        self.eventQueue = eventQueue
         
     def __str__(self):
         return "Cards in hand: " + str(self._cardsOnHand)
@@ -21,16 +23,20 @@ class Hand(object):
     def shuffle(self):
         shuffle(self._cardsOnHand)
     
-    def addCardFromJSON(self, json):
-        print json
-        newCard = Card(json[0], json[1])
+    def addCardFromRes(self, res):
+        res = res["card"]
+        newCard = Card(res[0], res[1])
         self.addCard(newCard)
+        
         
     def addCard(self, newCard):
         isPair, pairCard = self._checkIfPair(newCard)
         if isPair:
-            self._pairs.append((pairCard, newCard))
+            print "Got", newCard, "to hand, is pair with", pairCard
+            self._pairs.append([pairCard.tolist(), newCard.tolist()])
+            self.eventQueue.addNewEvent(EventType.GOT_PAIR_ON_HAND)
         else:
+            print "Added", newCard, "to hand"
             self._cardsOnHand.append(newCard)
         self.shuffle()
     
@@ -59,7 +65,7 @@ class Hand(object):
         
     def pickCard(self, index = 0):
         try:
-            return self._cardsOnHand.pop(index)
+            return self._cardsOnHand.pop(index).tolist()
         except:
             print "Error picking card from hand:", sys.exc_info()[0]
             raise
@@ -69,6 +75,11 @@ class Hand(object):
     
     def countPairs(self):
         return len(self._pairs)
+    
+    def lastCard(self):
+        if len(self._cardsOnHand) and len(self._pairs) == 0:
+            return True
+        return False
 
         
 class Card(object):
@@ -97,9 +108,10 @@ class Card(object):
             return CardColor.BLACK
         elif self._kind in [CardType.HEARTS, CardType.DIAMONDS]:
             return CardColor.RED
-        elif self._kind in [CardColor.JOKER]:
+        elif self._kind in [CardType.JOKER]:
             return CardType.JOKER
         else:
+            print "kind is", self._kind
             raise Exception("Invalid Card Kind")
                 
     def getNumber(self):
@@ -107,7 +119,10 @@ class Card(object):
     
     def getKind(self):
         return self._kind
-        
+    
+    def tolist(self):
+        return [self._number, self._kind]
+            
     def isPair(self, card):
         '''
         Method for checking if two cards are compatible

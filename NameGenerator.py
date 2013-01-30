@@ -11,6 +11,8 @@ partA = [ \
          "SteffenThe",
          "SimonThe",
          "SimenThe",
+         "WeiThe",
+         "Marthe",
          "IdaThe",
          "AlexThe",
          "green",
