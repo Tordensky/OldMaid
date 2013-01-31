@@ -4,7 +4,7 @@ Created on Jan 23, 2013
 @author: Simon
 '''
 class ServerSettings(object):
-    HOST =  "129.242.22.237"#
+    HOST =  "129.242.22.237"#"njaal.net"#
     PORT =  9898
     ADDR = (HOST, PORT)
 

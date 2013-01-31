@@ -4,9 +4,11 @@ Created on Jan 23, 2013
 @author: Simon
 '''
 from Properties import CardType, CardColor
-from random import shuffle
+import random, time
 import sys
 from EventHandler import EventType
+
+random.seed(time.clock())
 
 class Hand(object):
     '''
@@ -21,13 +23,12 @@ class Hand(object):
         return "Cards in hand: " + str(self._cardsOnHand)
         
     def shuffle(self):
-        shuffle(self._cardsOnHand)
+        random.shuffle(self._cardsOnHand)
     
     def addCardFromRes(self, res):
         res = res["card"]
         newCard = Card(res[0], res[1])
         self.addCard(newCard)
-        
         
     def addCard(self, newCard):
         isPair, pairCard = self._checkIfPair(newCard)
@@ -43,14 +44,16 @@ class Hand(object):
     def _checkIfPair(self, newCard):
         for card in self._cardsOnHand:
             if card.isPair(newCard):
+                tmp = card
                 self._cardsOnHand.remove(card)
-                return (True, card)
+                return (True, tmp)
         return (False, None)
         
     def getAllCards(self):
         return self._cardsOnHand
     
     def _removePair(self):
+        print "Hand ", self
         return self._pairs.pop(0)
     
     def removeNextPair(self):
@@ -65,6 +68,7 @@ class Hand(object):
         
     def pickCard(self, index = 0):
         try:
+            self.lastCard()
             return self._cardsOnHand.pop(index).tolist()
         except:
             print "Error picking card from hand:", sys.exc_info()[0]
@@ -77,7 +81,7 @@ class Hand(object):
         return len(self._pairs)
     
     def lastCard(self):
-        if len(self._cardsOnHand) and len(self._pairs) == 0:
+        if len(self._cardsOnHand) == 0:
             return True
         return False
 
@@ -90,8 +94,8 @@ class Card(object):
         self._number = number
         self._kind = kind
     
-    def __eq__(self, card):
-        return self._isCompatiblePair(card)
+    #def __eq__(self, card):
+    #    return self._isCompatiblePair(card)
     
     def __str__(self):
         if self._kind == CardType.JOKER:
@@ -109,7 +113,7 @@ class Card(object):
         elif self._kind in [CardType.HEARTS, CardType.DIAMONDS]:
             return CardColor.RED
         elif self._kind in [CardType.JOKER]:
-            return CardType.JOKER
+            return CardColor.JOKER
         else:
             print "kind is", self._kind
             raise Exception("Invalid Card Kind")

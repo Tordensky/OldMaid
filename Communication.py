@@ -5,6 +5,7 @@ Created on Jan 23, 2013
 '''
 import socket, json, sys, time, thread, random 
 from EventHandler import DataType, EventType
+random.seed(time.clock())
 
 class Communication(object):
     '''
@@ -69,6 +70,9 @@ class Communication(object):
     def receive(self, size):
         return self.socket.recv(size)
     
+    def getConnectionAddr(self):
+        return self.socket.getpeername()
+    
     def close(self):
         self.socket.close()
         
@@ -102,7 +106,8 @@ class RightHandHandler(object):
         while (self.running):
             try:
                 msg = self._receive()
-                print "RightHandHandler Received Message:\n\t", msg                
+                if msg:
+                    print "RightHandHandler Received Message:\n\t", msg                
                 self._parseMessage(msg)
                 
             except socket.error, e:
@@ -110,38 +115,43 @@ class RightHandHandler(object):
                 eventData[DataType.EXCEPTION] = e
                 eventData[DataType.SOCKET_HANDLER] = self 
                 self.eventQueue.addNewEvent(EventType.SOCKET_HANDLER_EXCEPTION, eventData)
-                break
+                
         
         self.teardown()
     
     def _parseMessage(self, msg):
-        try:
-            msg = json.loads(msg)
-            if msg.has_key("cmd"):
-                if msg["cmd"] == "your_turn":
-                    print "Gets my turn from right player"
-                    self.eventQueue.addNewEvent(EventType.MY_TURN)
-                    self.sendOK()
-                elif msg["cmd"] == "offer":
-                    print "Got Offer message"
-                    if self.players.out:
-                        self.sendOUT()
-                    else:
+        if msg:
+        
+            try:
+                msg = json.loads(msg)
+                if msg.has_key("cmd"):
+                    if msg["cmd"] == "your_turn":
+                        print "Gets my turn from right player"
+                        self.eventQueue.addNewEvent(EventType.MY_TURN)
                         self.sendOK()
-                        self._pickCard(msg["num_cards"])
-                           
+                    
+                    elif msg["cmd"] == "offer":
+                        print "Got Offer message"
+                        if self.players.out:
+                            self.sendOUT()
+                        
+                        else:
+                            self.sendOK()
+                            self._pickCard(msg["num_cards"])
+                               
+                    else:
+                        print "received cmd:", msg["cmd"]
                 else:
-                    print "received cmd:", msg["cmd"]
-            else:
-                print "Error: message does not have a command"
-            
-        except TypeError:
-            print "Error parsing JSON/Message in RightHandler receive"
+                    print "Error: message does not have a command"
+                
+            except TypeError:
+                print "Error parsing JSON/Message in RightHandler receive"
     
     def _pickCard(self, numCards):
         if numCards > 0:
-            print "does not print card"
-            pick = random.randrange(0, numCards - 1)
+            if not numCards == 1:
+                pick = random.randrange(0, numCards - 1)
+            pick = 0
             cmd = {"cmd" : "pick", "card_num" : pick}
             msg = json.dumps(cmd)
             self.send(msg)
@@ -157,6 +167,7 @@ class RightHandHandler(object):
                 elif res["result"] == "error":
                     print "Got error trying to pick card"
         else:
+            #self.players.setOutFromAddr(self.sock.getpeername())
             self.eventQueue.addNewEvent(EventType.OFFER_HAND)   
             
     def _receive(self):
@@ -182,7 +193,7 @@ class LeftHand(Communication):
     def __init__(self, eventQueue, players):
         addr = players.getNextLeftPlayerAddr()
         if addr == -1:            
-            return -1    
+            return None    
         self.addr = addr
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -190,6 +201,15 @@ class LeftHand(Communication):
         
         self.eventQueue = eventQueue
         self.players = players
+        
+    def receive(self, size):
+        msg = self.socket.recv(size)
+        print "LeftHand received:\n\t", msg
+        return msg
+    
+    def send(self, msg):
+        print "LeftHandSends", msg
+        self.socket.send(msg)
         
     
                      

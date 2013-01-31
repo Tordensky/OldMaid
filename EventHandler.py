@@ -21,6 +21,7 @@ class EventType(object):
     SOCKET_HANDLER_EXCEPTION = "socket_handle_exception"
     GOT_PAIR_ON_HAND = "got_pair"
     OFFER_HAND = "offer_hand"
+    NO_MORE_CARD_ON_TABLE = "no_more_cards_on_table"
     
     PICKED_CARD_FROM_RIGHT_PLAYER = "picked_card_from_left_player"
 

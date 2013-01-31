@@ -2,7 +2,7 @@
 Created on Jan 23, 2013
 @author: Simon
 '''
-import CardHandler, NameGenerator, socket, thread, time, json
+import CardHandler, NameGenerator, socket, thread, time, json,sys
 from Communication import Communication, RightHandServer, LeftHand
 from Properties import ServerSettings
 from EventHandler import EventType, Dispatcher, EventQueue, DataType
@@ -56,6 +56,7 @@ class Players(object):
         return name, num, addr
     
     def getNextLeftPlayerAddr(self):
+        print "players", self.players
         for x in range(self.myNum, self.numPlayers + self.myNum - 1):
             nextLeft = x % self.numPlayers
             if not self.players[nextLeft].out:
@@ -63,6 +64,24 @@ class Players(object):
                 print "I Player%d is Connecting to Player%d @ addr: %s" % (self.myNum, self.players[nextLeft].num, addr)
                 return addr
         return -1
+    
+    def setOutFromAddr(self, addr):
+        for player in self.players:
+            if player.addr == addr:
+                print player.name, "is OUT of the game"
+                player.out = True;
+                return True
+        print "Could not find playes that has addr %s in list of players" % (addr)
+        return False
+    
+    def setOutFromStatus(self, res):
+        playersOut = res["out"]
+        for player in self.players:
+            playString = "player" + str(player.num)
+            if playString in playersOut:
+                player.out = True
+        
+            
                     
 class Player(object):
     def __init__(self, name, playerNum, addr):
@@ -73,7 +92,7 @@ class Player(object):
         self.out = False
     
     def __repr__(self):
-        return "Player%s is %s @ Addr: %s, IsMe: %s\n" % (self.num, self.name, self.addr, self.isMe)
+        return "Player%s is %s @ Addr: %s, IsMe: %s, Is out: %s\n" % (self.num, self.name, self.addr, self.isMe, self.out)
         
     def isFirst(self):
         if self.myNum == 1:
@@ -116,6 +135,8 @@ class Game(object):
         self.dispatcher.register_handler(EventType.YOUR_TURN, self.yourTurn)
         self.dispatcher.register_handler(EventType.OFFER_HAND, self.offerHand)
         
+        self.dispatcher.register_handler(EventType.NO_MORE_CARD_ON_TABLE, self._setNoMoreCardsOnTable)
+        
         self.dispatcher.register_handler(EventType.PICKED_CARD_FROM_RIGHT_PLAYER, self.gotCard)
         
     def _finnish(self, event):
@@ -135,20 +156,25 @@ class Game(object):
         if data.has_key("fatal"):
             if data["fatal"] == True:
                 self.eventQueue.addNewEvent(EventType.FINISH)
-                
+    
+    def _setNoMoreCardsOnTable(self, event):
+        self.noCardOnTable = True
+                    
     def start(self):
         self.eventQueue.addNewEvent(EventType.JOIN)
         
-        print self.dispatcher._handlers
         self.finished = False
         while not self.finished:
             
-            if len(self.eventQueue.queue):
-                print self.eventQueue.queue
+#            if len(self.eventQueue.queue):
+#                print self.eventQueue.queue
+            time.sleep(0.1)
             
+            #print self.players
             
             for event in self.eventQueue.getAll():
                 self.dispatcher.dispatch(event)
+                #print "CARD LEFT:", self.hand.count(), "Is out:", self.players.out, "Card on table", self.noCardOnTable
     
     def myTurn(self, event):
         if not self.noCardOnTable:
@@ -197,14 +223,10 @@ class Game(object):
         # This is the right hand server handling incoming events
         self.rigthHand = RightHandServer(self.players.myAddr, self.eventQueue, self.players)
         thread.start_new(self.rigthHand.run, ())
-        
-        #time.sleep(2)
-        
-        # TODO Connect to next player
+                
         try:
             self.leftHand = LeftHand(self.eventQueue, self.players)
             self.leftHand.connect()
-            #self.leftHand.send("Hello left player, I am %s" % (self.players.myName))
         except socket.error:
             eventData = {"msg" : "Error: Could not connect to left player in initial phase, Exiting", "fatal" : True}
             self.eventQueue.addNewEvent(EventType.ERROR, eventData)
@@ -259,7 +281,7 @@ class Game(object):
         if lastCardOnHand == True and self.noCardOnTable == True:
             print "Discarded last card on hand, I am out"
             self.players.out = True
-            self.eventQueue.addNewEvent(EventType.OUT)
+            self.outOfCards(None)
         else:
             # Can't exit game if there are more cards that could be drawn from table
             lastCardOnHand = False
@@ -279,15 +301,24 @@ class Game(object):
         send: {'cmd':'out_of_cards'}
         recv: {'result':'ok'}
         '''
+        self.players.out = True
+        cmd = {"cmd" : "out_of_cards"}
+        res = self.cardServer.cmd(cmd)
+        
         print "I am out of cards"        
-        pass
     
     def getStatus(self):
         '''
         send: {'cmd':'status'}
         recv: {'in':['player1', 'player2', ...], 'out':{'player3'}}
         '''
-        pass
+        cmd = {"cmd" : "status"}
+        res = self.cardServer.cmd(cmd)
+        
+        print "Got status from server: ", res
+        if res.has_key("out"):
+            print "Players out:", res["out"]
+            self.players.setOutFromStatus(res)
     
     #Client methods
     def yourTurn(self, Event):
@@ -306,11 +337,23 @@ class Game(object):
         send: {'cmd':'offer', 'num_cards':number of cards left}
         recv: {'result':'ok'/'out'}
         '''
-        
         count = self.hand.count()
+        
+        self.noCardOnTable = True
+        
+        lastCardOnHand = self.hand.lastCard()
+        
+        if lastCardOnHand == True and self.noCardOnTable == True:
+            print "Discarded last card on hand, I am out"
+            self.players.out = True
+            self.outOfCards(None)
+        
         cmd = {"cmd" : "offer", "num_cards" : count}
         
-        while(1):        
+        self.getStatus()
+        
+        for x in range(self.players.numPlayers):        
+            
             res = self.leftHand.cmd(cmd)
             
             if res.has_key("result"):
@@ -318,17 +361,24 @@ class Game(object):
                     if count > 0:
                         self.pickCard(self.leftHand.receive(1024))
                         break;
+                
                 elif res["result"] == "out":
+                    print "GOT OUT OF CARDS ! ! !!  ! !! ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    outAddr = self.leftHand.getConnectionAddr()
+                    self.getStatus()
+                    self.players.setOutFromAddr(outAddr)
                     self.leftHand.close()
-                    while(1):
+                    for x in range(self.players.numPlayers):
+                        self.getStatus()
                         self.leftHand = LeftHand(self.eventQueue, self.players)
-                        if self.leftHand == -1:
+                        if self.leftHand == None:
                             print "GAME OVER"
-                            break
+                            sys.exit()
+                            return
                         else:
                             self.leftHand.connect()
                             break
-                    break
+                    
                 
     
     def pickCard(self, res):
