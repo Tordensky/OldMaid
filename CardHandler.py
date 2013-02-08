@@ -100,7 +100,7 @@ class Card(object):
     def __str__(self):
         if self._kind == CardType.JOKER:
             return "Card: %s" % (CardType.JOKER)
-        return "Card: %d of %s" % (self._number, self._kind)
+        return "Card: %s of %s" % (str(self._number), self._kind)
         
     def __repr__(self):
         return self.__str__()

@@ -42,7 +42,9 @@ class Communication(object):
                 msg = json.dumps(cmd) 
                 self.socket.send(msg)
                 response = self.socket.recv(self.MSG_BUFF_SIZE)
+                print response
                 response = json.loads(response)
+                
                 return response
             except TypeError:
                 print "Got exception: %s, while trying to parse msg: %s to json" % (sys.exc_info()[0], str(cmd))
@@ -149,9 +151,11 @@ class RightHandHandler(object):
     
     def _pickCard(self, numCards):
         if numCards > 0:
-            if not numCards == 1:
-                pick = random.randrange(0, numCards - 1)
-            pick = 0
+            
+            pick = random.randrange(0, numCards)
+            if numCards == 1:
+                pick = 0
+            
             cmd = {"cmd" : "pick", "card_num" : pick}
             msg = json.dumps(cmd)
             self.send(msg)

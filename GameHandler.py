@@ -28,10 +28,19 @@ class Players(object):
         return msg
     
     def addPlayersFromJson(self, msg):
-        for player in sorted(msg["players"].keys()):
+        num = 0
+        for player in msg["players"]:
+        #for player in sorted(msg["players"].keys()):
             
-            name, num, addr = self._parsePlayerInfo(player, msg["players"][player])
+        #    name, num, addr = self._parsePlayerInfo(player, msg["players"][player])
+            addr, name = player
+            num += 1
             
+            # Ugly hack to handle IPv6 addresses in Windows
+            if len(addr[0]) > 14:
+                addr[0] = addr[0][7:]
+            
+            addr = tuple(addr)
             player = Player(name, num, addr)
             
             if name == self.myName:
@@ -195,7 +204,7 @@ class Game(object):
         
         try: 
             self.cardServer.connect()
-            cmd = {"cmd" : "join", "nick" : self.players.myName}
+            cmd = {"cmd" : "join", "nick" : self.players.myName, "port" : ServerSettings.MY_PORT}
             result = self.cardServer.cmd(cmd)
             if result["result"] == "ok":
                 self.players.addPlayersFromJson(result)
@@ -254,7 +263,9 @@ class Game(object):
         
         elif res["result"] == "last_card":
             print "Got Last Card"
+            self.hand.addCardFromRes(res)
             self.noCardOnTable = True
+            #print "hand:", self.hand
             self.eventQueue.addNewEvent(EventType.OFFER_HAND)
             pass
         
