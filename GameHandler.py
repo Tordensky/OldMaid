@@ -175,8 +175,8 @@ class Game(object):
         self.finished = False
         while not self.finished:
             
-#            if len(self.eventQueue.queue):
-#                print self.eventQueue.queue
+#           if len(self.eventQueue.queue):
+#               print self.eventQueue.queue
             time.sleep(0.1)
             
             #print self.players
@@ -316,7 +316,7 @@ class Game(object):
         cmd = {"cmd" : "out_of_cards"}
         res = self.cardServer.cmd(cmd)
         
-        print "I am out of cards"        
+        print "I am out of cards:", res        
     
     def getStatus(self):
         '''
@@ -364,7 +364,7 @@ class Game(object):
         self.getStatus()
         
         for x in range(self.players.numPlayers):        
-            
+            x
             res = self.leftHand.cmd(cmd)
             
             if res.has_key("result"):
