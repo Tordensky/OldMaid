@@ -293,6 +293,7 @@ class Game(object):
             print "Discarded last card on hand, I am out"
             self.players.out = True
             self.outOfCards(None)
+            sys.exit()
         else:
             # Can't exit game if there are more cards that could be drawn from table
             lastCardOnHand = False
@@ -354,7 +355,7 @@ class Game(object):
         
         lastCardOnHand = self.hand.lastCard()
         
-        if lastCardOnHand == True and self.noCardOnTable == True:
+        if lastCardOnHand == True:
             print "Discarded last card on hand, I am out"
             self.players.out = True
             self.outOfCards(None)
@@ -374,19 +375,17 @@ class Game(object):
                         break;
                 
                 elif res["result"] == "out":
-                    print "GOT OUT OF CARDS ! ! !!  ! !! ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                     outAddr = self.leftHand.getConnectionAddr()
                     self.getStatus()
                     self.players.setOutFromAddr(outAddr)
                     self.leftHand.close()
                     for x in range(self.players.numPlayers):
-                        self.getStatus()
-                        self.leftHand = LeftHand(self.eventQueue, self.players)
-                        if self.leftHand == None:
+                        if self.players.getNextLeftPlayerAddr() == -1:
                             print "GAME OVER"
                             sys.exit()
                             return
                         else:
+                            self.leftHand = LeftHand(self.eventQueue, self.players)
                             self.leftHand.connect()
                             break
                     
@@ -402,9 +401,18 @@ class Game(object):
         if res.has_key("cmd"):
             if res["cmd"] == "pick":
                 card = self.hand.pickCard(res['card_num'])
+                
+                
+                                
                 msg = {"result" : "ok", "card" : card}
                 msg = json.dumps(msg)
                 self.leftHand.send(msg)
+                
+                lastCardOnHand = self.hand.lastCard()
+                if lastCardOnHand == True:
+                    print "Discarded last card on hand, I am out"
+                    self.players.out = True
+                    self.outOfCards(None)
     
 if __name__ == '__main__':    
     player = Game()

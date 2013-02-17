@@ -143,47 +143,5 @@ class Card(object):
         
         
 if __name__ == '__main__':    
-    # Tests for cards class
-    cardA = Card(1, CardType.SPADES)
-    cardB = Card(1, CardType.DIAMONDS)
-    cardC = Card(1, CardType.HEARTS)
-    cardD = Card(0, CardType.JOKER)
-    
-    
-    print cardA
-    print cardB
-    print cardC
-    print cardD
-    
-    print "Should be False is: %s" % (cardA.isPair(cardB))
-    print "Should be True is: %s" % (cardC.isPair(cardB))  
-    print "Should be %d is: %d" % (CardColor.RED, cardB.color)
-    print "Should be %d is: %d" % (CardColor.BLACK, cardA.color)  
-    print "Should be %d is: %d" % (1, cardB.getNumber())
-    print "Should be %s is: %s" % (CardType.SPADES, cardA.getKind())
-    
-    #tests for Hand Class
-    hand = Hand()
-    try:
-        print "Should be an exception", hand.pickCard(2)
-        print "Should not have printed this"
-    except:
-        print "Success got exception"
-    
-    print hand
-    hand.addCard(cardA)
-    hand.addCard(cardB)
-    hand.addCard(cardC)
-    hand.addCard(cardD)
-    print hand
-    hand.shuffle()
-    print "After shuffle", hand
-    print "Picket: ", hand.pickCard(1)
-    print hand
-    print "Cards on hand:", hand.count()
-    print "Card in pair:", hand.countPairs()
-    print hand.removeNextPair()
-    print hand.removeAllPairs()
-    print "Cards on hand:", hand.count()
-    print "Card in pair:", hand.countPairs()
+    pass
     

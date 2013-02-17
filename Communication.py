@@ -117,13 +117,13 @@ class RightHandHandler(object):
                 eventData[DataType.EXCEPTION] = e
                 eventData[DataType.SOCKET_HANDLER] = self 
                 self.eventQueue.addNewEvent(EventType.SOCKET_HANDLER_EXCEPTION, eventData)
+                break;
                 
         
         self.teardown()
     
     def _parseMessage(self, msg):
         if msg:
-        
             try:
                 msg = json.loads(msg)
                 if msg.has_key("cmd"):
@@ -196,6 +196,7 @@ class RightHandHandler(object):
 class LeftHand(Communication):
     def __init__(self, eventQueue, players):
         addr = players.getNextLeftPlayerAddr()
+        print "GOT ADDR", addr
         if addr == -1:            
             return None    
         self.addr = addr
