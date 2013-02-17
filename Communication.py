@@ -139,6 +139,7 @@ class RightHandHandler(object):
                         
                         else:
                             self.sendOK()
+                            time.sleep(0.05)
                             self._pickCard(msg["num_cards"])
                                
                     else:

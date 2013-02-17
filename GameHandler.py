@@ -362,6 +362,7 @@ class Game(object):
         
         cmd = {"cmd" : "offer", "num_cards" : count}
         
+        
         self.getStatus()
         
         for x in range(self.players.numPlayers):        
@@ -386,11 +387,12 @@ class Game(object):
                             return
                         else:
                             self.leftHand = LeftHand(self.eventQueue, self.players)
+                            print "\n\n\n\n\n SUCCEFULL RECONNECTION \n\n\n\n\n\n"
                             self.leftHand.connect()
                             break
+                            
                     
-                
-    
+
     def pickCard(self, res):
         '''
         send: {'cmd':'pick', 'card_num': the number of the card chosen (must be between 0 and
